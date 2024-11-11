@@ -4,11 +4,6 @@
 
 namespace sylar
 {
-
-    // ------------------------------- LogEvent
-    LogEvent::LogEvent(const char* file, int32_t line, uint32_t elapse, uint32_t thread_id, uint32_t fiber_id, uint64_t time)
-        : m_file(file), m_line(line), m_elapse(elapse), m_threadId(thread_id), m_fiberId(fiber_id), m_time(time) {}
-
     // ------------------------------- LogLevel
     const char* LogLevel::ToString(LogLevel::Level level) {
         switch (level) {
@@ -78,17 +73,37 @@ namespace sylar
         }
     }
 
+    // -------------------------------- LogEvent
+    void LogEvent::format(const char* fmt, ...) {
+        va_list al;
+        va_start(al, fmt);
+        char* buf = nullptr;
+        int len = vasprintf(&buf, fmt, al);
+        if (len != -1) {
+            m_ss << std::string(buf, len);
+            free(buf);
+        }
+        va_end(al);
+    }
+
     // --------------------------------- LogFormatter
     LogFormatter::LogFormatter(const std::string& pattern) : m_pattern(pattern) {
         init();
     }
 
-    std::string LogFormatter::format(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event) {
-        std::stringstream ss;
+    // std::string LogFormatter::format(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event) {
+    //     std::stringstream ss;
+    //     for (auto& it : m_items) {
+    //         it->format(ss, logger, level, event);
+    //     }
+    //     return ss.str();
+    // }
+
+    std::ostream& LogFormatter::format(std::ostream& ofs, std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event) {
         for (auto& it : m_items) {
-            it->format(ss, logger, level, event);
+            it->format(ofs, logger, level, event);
         }
-        return ss.str();
+        return ofs;
     }
 
     // %m %d{%Y-%m-%d %H:%M:%S} %%
@@ -202,28 +217,43 @@ namespace sylar
         }
     }
 
+
     // --------------------------------- StdoutLogAppender
+
+    // void StdoutLogAppender::log(Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event) {
+    //     if (level >= m_level) {
+    //         std::cout << m_formatter->format(logger, level, event);
+    //     }
+    // }
 
     void StdoutLogAppender::log(Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event) {
         if (level >= m_level) {
-            std::cout << m_formatter->format(logger, level, event);
+            m_formatter->format(std::cout, logger, level, event);
         }
     }
 
     // --------------------------------- FileLogAppender
-    FileLogAppender::FileLogAppender(const std::string& filename) : m_filename(filename) {}
+    FileLogAppender::FileLogAppender(const std::string& filename) : m_filename(filename) {
+        reopen();
+    }
 
     bool FileLogAppender::reopen() {
-        if (m_filestream) {
+        if (m_filestream.is_open()) {
             m_filestream.close();
         }
-        m_filestream.open(m_filename);
+        m_filestream.open(m_filename, std::ios::app);
         return !!m_filestream;
     }
 
+    // void FileLogAppender::log(Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event) {
+    //     if (level >= m_level) {
+    //         m_filestream << m_formatter->format(logger, level, event);
+    //     }
+    // }
+
     void FileLogAppender::log(Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event) {
         if (level >= m_level) {
-            m_filestream << m_formatter->format(logger, level, event);
+            m_formatter->format(m_filestream, logger, level, event);
         }
     }
 
