@@ -33,4 +33,5 @@
 
 build/*
 bin/*
+!bin/**/
 log.txt
