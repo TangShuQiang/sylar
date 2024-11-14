@@ -12,11 +12,12 @@ set(LIB_SRC
 
 add_library(sylar SHARED ${LIB_SRC})
 
-add_executable(test tests/test.cc)
-add_dependencies(test sylar)
-target_link_libraries(test sylar)
-
 find_package(yaml-cpp REQUIRED)
+
+add_executable(test_log tests/test_log.cc)
+add_dependencies(test_log sylar)
+target_link_libraries(test_log sylar yaml-cpp)
+
 
 add_executable(test_config tests/test_config.cc)
 add_dependencies(test_config sylar)

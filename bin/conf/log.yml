@@ -13,3 +13,10 @@ logs:
       - type: FileLogAppender
         file: /home/tang/logs/sylar/system.txt
       - type: StdoutLogAppender
+
+system:
+  port: 9900
+  value: 15
+  int_vec: 
+    - 10 
+    - 30
