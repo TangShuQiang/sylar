@@ -2,6 +2,7 @@
 #define __SYLAR_CONFIG_H__
 
 #include <string>
+#include <set>
 #include <memory>
 #include <boost/lexical_cast.hpp>
 #include <exception>
@@ -51,8 +52,103 @@ namespace sylar
         }
     };
 
-}
+    template<typename T>
+    class LexicalCast<std::string, std::list<T>>
+    {
+    public:
+        std::list<T> operator()(const std::string& str) {
+            YAML::Node node = YAML::Load(str);
+            std::list<T> list;
+            std::stringstream ss;
+            for (auto it : node) {
+                ss.str("");
+                ss << it;
+                list.push_back(LexicalCast<std::string, T>()(ss.str()));
+            }
+            return list;
+        }
+    };
 
+    template<typename T>
+    class LexicalCast<std::list<T>, std::string>
+    {
+    public:
+        std::string operator()(const std::list<T>& list) {
+            YAML::Node node(YAML::NodeType::Sequence);
+            for (auto& t : list) {
+                node.push_back(YAML::Load(LexicalCast<T, std::string>()(t)));
+            }
+            std::stringstream ss;
+            ss << node;
+            return ss.str();
+        }
+    };
+
+    template<typename T>
+    class LexicalCast<std::string, std::set<T>>
+    {
+    public:
+        std::set<T> operator()(const std::string& str) {
+            YAML::Node node = YAML::Load(str);
+            std::set<T> set;
+            std::stringstream ss;
+            for (auto it : node) {
+                ss.str("");
+                ss << it;
+                set.insert(LexicalCast<std::string, T>()(ss.str()));
+            }
+            return set;
+        }
+    };
+
+    template<typename T>
+    class LexicalCast<std::set<T>, std::string>
+    {
+    public:
+        std::string operator()(const std::set<T>& set) {
+            YAML::Node node(YAML::NodeType::Sequence);
+            for (auto& t : set) {
+                node.push_back(YAML::Load(LexicalCast<T, std::string>()(t)));
+            }
+            std::stringstream ss;
+            ss << node;
+            return ss.str();
+        }
+    };
+
+    template<typename T>
+    class LexicalCast<std::string, std::map<std::string, T>>
+    {
+    public:
+        std::map<std::string, T> operator()(const std::string& str) {
+            YAML::Node node = YAML::Load(str);
+            std::map<std::string, T> map;
+            std::stringstream ss;
+            for (auto it : node) {
+                ss.str("");
+                ss << it.second;
+                map.insert({ it.first.Scalar(), LexicalCast<std::string, T>()(ss.str()) });
+            }
+            return map;
+        }
+    };
+
+    template<typename T>
+    class LexicalCast<std::map<std::string, T>, std::string>
+    {
+    public:
+        std::string operator()(const std::map<std::string, T>& map) {
+            YAML::Node node(YAML::NodeType::Map);
+            for (auto& i : map) {
+                node[i.first] = YAML::Load(LexicalCast<T, std::string>()(i.second));
+            }
+            std::stringstream ss;
+            ss << node;
+            return ss.str();
+        }
+    };
+
+}
 
 namespace sylar
 {
@@ -71,6 +167,7 @@ namespace sylar
 
         virtual std::string toString() = 0;
         virtual bool fromString(const std::string& str) = 0;
+        virtual std::string getTypeName() const = 0;
     protected:
         std::string m_name;
         std::string m_description;
@@ -90,7 +187,7 @@ namespace sylar
                 return ToStr()(m_val);
             } catch (std::exception& e) {
                 SYLAR_LOG_ERROR(SYLAR_LOG_ROOT()) << "ConfigVar::toStirng exception"
-                    << e.what() << " convert: " << typeid(m_val).name() << " to string";
+                    << e.what() << " convert: " << getTypeName() << " to string";
             }
             return "";
         }
@@ -102,10 +199,12 @@ namespace sylar
                 return true;
             } catch (std::exception& e) {
                 SYLAR_LOG_ERROR(SYLAR_LOG_ROOT()) << "ConFigVar::fromString exception"
-                    << e.what() << " convert: string to " << typeid(m_val).name();
+                    << e.what() << " convert: string to " << getTypeName();
             }
             return false;
         }
+
+        std::string getTypeName() const override { return typeid(T).name(); }
 
         const T getValue() const { return m_val; }
         void setValue(const T& val) { m_val = val; }
@@ -120,11 +219,22 @@ namespace sylar
 
         template<typename T>
         static typename ConfigVar<T>::ptr Add(const std::string& name, const T& default_value, const std::string& description = "") {
-            auto tmp = Lookup<T>(name);
-            if (tmp) {
-                SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "Lookup name=" << name << " exists.";
-                return tmp;
+            auto it = s_datas.find(name);
+            if (it != s_datas.end()) {
+                auto tmp = std::dynamic_pointer_cast<ConfigVar<T>>(it->second);
+                if (tmp) {
+                    SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "Add name=" << name << " exists.";
+                    return tmp;
+                } else {
+                    SYLAR_LOG_ERROR(SYLAR_LOG_ROOT()) << "Add name=" << name << " exists but type not "
+                        << typeid(T).name() << ", real_type=" << it->second->getTypeName();
+                }
             }
+            // auto tmp = Lookup<T>(name);
+            // if (tmp) {
+            //     SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "Lookup name=" << name << " exists.";
+            //     return tmp;
+            // }
             if (name.find_first_not_of("abcdefghikjlmnopqrstuvwxyz._0123456789") != std::string::npos) {
                 SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "Lookup name invalid " << name;
                 throw std::invalid_argument(name);
@@ -134,14 +244,14 @@ namespace sylar
             return v;
         }
 
-        template<typename T>
-        static typename ConfigVar<T>::ptr Lookup(const std::string& name) {
-            auto it = s_datas.find(name);
-            if (it == s_datas.end()) {
-                return nullptr;
-            }
-            return std::dynamic_pointer_cast<ConfigVar<T>>(it->second);
-        }
+        // template<typename T>
+        // static typename ConfigVar<T>::ptr Lookup(const std::string& name) {
+        //     auto it = s_datas.find(name);
+        //     if (it == s_datas.end()) {
+        //         return nullptr;
+        //     }
+        //     return std::dynamic_pointer_cast<ConfigVar<T>>(it->second);
+        // }
 
         static void LoadFromYaml(const YAML::Node& root);
 
