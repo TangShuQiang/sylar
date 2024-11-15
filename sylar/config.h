@@ -4,6 +4,7 @@
 #include <string>
 #include <set>
 #include <memory>
+#include <functional>
 #include <boost/lexical_cast.hpp>
 #include <exception>
 #include <yaml-cpp/yaml.h>
@@ -178,6 +179,7 @@ namespace sylar
     {
     public:
         using ptr = std::shared_ptr<ConfigVar>;
+        using on_change_cb = std::function<void(const T& old_value, const T& new_value)>;
         ConfigVar(const std::string& name, const T& default_value, const std::string& description = "")
             : ConfigVarBase(name, description), m_val(default_value) {}
 
@@ -207,9 +209,40 @@ namespace sylar
         std::string getTypeName() const override { return typeid(T).name(); }
 
         const T getValue() const { return m_val; }
-        void setValue(const T& val) { m_val = val; }
+
+        void setValue(const T& val) {
+            if (m_val == val) {
+                return;
+            }
+            for (auto& it : m_cbs) {
+                it.second(m_val, val);
+            }
+            m_val = val;
+        }
+
+        uint64_t addListener(on_change_cb cb) {
+            static uint64_t s_fun_id = 0;
+            ++s_fun_id;
+            m_cbs[s_fun_id] = cb;
+            return s_fun_id;
+        }
+
+        void delListener(uint64_t key) {
+            m_cbs.erase(key);
+        }
+
+        on_change_cb getListener(uint64_t key) {
+            auto it = m_cbs.find(key);
+            return it == m_cbs.end() ? nullptr : it->second;
+        }
+
+        void clearListener() {
+            m_cbs.clear();
+        }
+
     private:
         T m_val;
+        std::map<uint64_t, on_change_cb> m_cbs;
     };
 
     class Config

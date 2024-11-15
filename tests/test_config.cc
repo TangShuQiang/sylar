@@ -122,6 +122,12 @@ public:
             << "]";
         return ss.str();
     }
+
+    bool operator==(const Person& rhs) const {
+        return m_name == rhs.m_name
+            && m_age == rhs.m_age
+            && m_sex == rhs.m_sex;
+    }
 };
 
 namespace sylar
@@ -159,6 +165,11 @@ namespace sylar
 void test_class() {
     sylar::ConfigVar<Person>::ptr conf_person_val = sylar::Config::Add("system.person", Person(), "person");
 
+    conf_person_val->addListener([](const Person& old_val, const Person& new_val) {
+        SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "old_val: " << old_val.toString();
+        SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "new_val: " << new_val.toString();
+    });
+
     Person p = conf_person_val->getValue();
     SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << p.toString();
 
@@ -169,9 +180,6 @@ void test_class() {
 
     SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << p.toString();
     SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << conf_person_val->toString();
-
-
-
 }
 
 int main(int argc, char** argv) {
