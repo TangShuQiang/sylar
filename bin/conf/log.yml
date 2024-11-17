@@ -4,29 +4,12 @@ logs:
     formatter: "%d %m%n"
     appenders:
       - type: FileLogAppender
-        file: /home/tang/logs/sylar/root.txt
+        file: /home/tang/workspaces/sylar/log/root.txt
       - type: StdoutLogAppender
   - name: system
     level: info
     formatter: "%d %m%n"
-    appender:
+    appenders:
       - type: FileLogAppender
-        file: /home/tang/logs/sylar/system.txt
+        file: /home/tang/workspaces/sylar/log/system.txt
       - type: StdoutLogAppender
-
-system:
-  port: 9900
-  value: 15
-  int_vec: 
-    - 10 
-    - 30
-  int_list: [20, 40, 60]
-  int_set: [30, 10, 40, 10, 30]
-  int_map:
-    k1: 10
-    k2: 500
-    k3: 100
-  person:
-    name: "tang"
-    age: 24
-    sex: false

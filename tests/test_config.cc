@@ -27,7 +27,7 @@ void print_yaml(YAML::Node& node, int level) {
 
 
 void test_yaml() {
-    YAML::Node root = YAML::LoadFile("/home/tang/workspaces/sylar/bin/conf/log.yml");
+    YAML::Node root = YAML::LoadFile("/home/tang/workspaces/sylar/bin/conf/test.yml");
     print_yaml(root, 0);
 }
 
@@ -67,7 +67,7 @@ void test_config() {
         SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "before v_map: " << it.first << "-" << it.second;
     }
 
-    YAML::Node root = YAML::LoadFile("/home/tang/workspaces/sylar/bin/conf/log.yml");
+    YAML::Node root = YAML::LoadFile("/home/tang/workspaces/sylar/bin/conf/test.yml");
     sylar::Config::LoadFromYaml(root);
 
     SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "after: " << g_int_value_config->getValue();
@@ -173,7 +173,7 @@ void test_class() {
     Person p = conf_person_val->getValue();
     SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << p.toString();
 
-    YAML::Node root = YAML::LoadFile("/home/tang/workspaces/sylar/bin/conf/log.yml");
+    YAML::Node root = YAML::LoadFile("/home/tang/workspaces/sylar/bin/conf/test.yml");
     sylar::Config::LoadFromYaml(root);
 
     p = conf_person_val->getValue();

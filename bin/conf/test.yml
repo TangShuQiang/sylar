@@ -1,0 +1,16 @@
+system:
+  port: 9900
+  value: 15
+  int_vec: 
+    - 10 
+    - 30
+  int_list: [20, 40, 60]
+  int_set: [30, 10, 40, 10, 30]
+  int_map:
+    k1: 10
+    k2: 500
+    k3: 100
+  person:
+    name: "tang"
+    age: 24
+    sex: false

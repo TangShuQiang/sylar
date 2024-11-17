@@ -31,8 +31,12 @@ namespace sylar
     void Logger::log(LogLevel::Level level, LogEvent::ptr event) {
         if (level >= m_level) {
             auto self = shared_from_this();
-            for (auto& it : m_appenders) {
-                it->log(self, level, event);
+            if (!m_appenders.empty()) {
+                for (auto& appender : m_appenders) {
+                    appender->log(self, level, event);
+                }
+            } else if (m_root) {
+                m_root->log(level, event);
             }
         }
     }

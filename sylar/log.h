@@ -36,10 +36,12 @@
 #define SYLAR_LOG_FMT_FATAL(logger, fmt, ...) SYLAR_LOG_FMT_LEVEL(logger, sylar::LogLevel::FATAL, fmt, ##__VA_ARGS__)
 
 #define SYLAR_LOG_ROOT() sylar::LoggerMgr::GetInstance()->getRoot()
+#define SYLAR_LOG_NAME(name) sylar::LoggerMgr::GetInstance()->getLogger(name)
 
 namespace sylar
 {
     class Logger;
+    class LoggerManager;
 
     //  日志级别
     class LogLevel
@@ -141,6 +143,7 @@ namespace sylar
     // 日志器
     class Logger : public std::enable_shared_from_this<Logger>
     {
+        friend class LoggerManager;
     public:
         using ptr = std::shared_ptr<Logger>;
 
@@ -164,7 +167,8 @@ namespace sylar
         std::string m_name;                         // 日志名称
         LogLevel::Level m_level;                    // 日志级别
         std::list<LogAppender::ptr> m_appenders;    // Appender集合
-        LogFormatter::ptr m_formatter;
+        LogFormatter::ptr m_formatter;              // 日志格式器
+        Logger::ptr m_root;                         // 主日志器
     };
 
     // 输出到控制台的Appender
@@ -217,10 +221,18 @@ namespace sylar
         }
 
         Logger::ptr getLogger(const std::string& name) {
-            if (m_loggers.find(name) == m_loggers.end()) {
-                return m_root;
+            auto it = m_loggers.find(name);
+            if (it != m_loggers.end()) {
+                return it->second;
             }
-            return m_loggers[name];
+            Logger::ptr logger = std::make_shared<Logger>(name);
+            logger->m_root = m_root;
+            m_loggers[name] = logger;
+            return logger;
+            // if (m_loggers.find(name) == m_loggers.end()) {
+            //     return m_root;
+            // }
+            // return m_loggers[name];
         }
 
         Logger::ptr getRoot() const { return m_root; }
