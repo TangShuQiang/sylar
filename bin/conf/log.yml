@@ -1,15 +1,15 @@
 logs:
   - name: root
     level: info
-    formatter: "%d %m%n"
+    formatter: "%d [%c] %m%n"
     appenders:
       - type: FileLogAppender
-        file: /home/tang/workspaces/sylar/log/root.txt
+        file: ./logs/root.txt
       - type: StdoutLogAppender
   - name: system
     level: info
     formatter: "%d %m%n"
     appenders:
       - type: FileLogAppender
-        file: /home/tang/workspaces/sylar/log/system.txt
+        file: ./logs/system.txt
       - type: StdoutLogAppender

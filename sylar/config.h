@@ -252,8 +252,8 @@ namespace sylar
 
         template<typename T>
         static typename ConfigVar<T>::ptr Add(const std::string& name, const T& default_value, const std::string& description = "") {
-            auto it = s_datas.find(name);
-            if (it != s_datas.end()) {
+            auto it = GetDatas().find(name);
+            if (it != GetDatas().end()) {
                 auto tmp = std::dynamic_pointer_cast<ConfigVar<T>>(it->second);
                 if (tmp) {
                     SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "Add name=" << name << " exists.";
@@ -273,7 +273,7 @@ namespace sylar
                 throw std::invalid_argument(name);
             }
             typename ConfigVar<T>::ptr v = std::make_shared<ConfigVar<T>>(name, default_value, description);
-            s_datas[name] = v;
+            GetDatas()[name] = v;
             return v;
         }
 
@@ -289,15 +289,20 @@ namespace sylar
         static void LoadFromYaml(const YAML::Node& root);
 
         static ConfigVarBase::ptr LookupBase(const std::string& name) {
-            auto it = s_datas.find(name);
-            if (it == s_datas.end()) {
+            auto it = GetDatas().find(name);
+            if (it == GetDatas().end()) {
                 return nullptr;
             }
             return it->second;
         }
 
     private:
-        static ConfigVarMap s_datas;
+        static ConfigVarMap& GetDatas() {
+            static ConfigVarMap s_datas;
+            return s_datas;
+        }
+
+        // static ConfigVarMap s_datas;
     };
 
 }

@@ -35,5 +35,5 @@ build/*
 bin/*
 !bin/**/
 log.txt
-log
-log/*
+logs
+logs/*

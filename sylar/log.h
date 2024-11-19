@@ -58,6 +58,7 @@ namespace sylar
         };
 
         static const char* ToString(LogLevel::Level level);
+        static LogLevel::Level FromString(const std::string& str);
     };
 
     // 日志事件
@@ -104,6 +105,7 @@ namespace sylar
         // std::string format(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event);
         std::ostream& format(std::ostream& ofs, std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event);
         void init();
+        bool isError() const { return m_error; }
 
     public:
         class FormatItem
@@ -132,11 +134,12 @@ namespace sylar
         void setLevel(LogLevel::Level level) { m_level = level; }
         LogLevel::Level getLevel() const { return m_level; }
 
-        void setFormatter(LogFormatter::ptr formatter) { m_formatter = formatter; }
         LogFormatter::ptr getFormatter() const { return m_formatter; }
+        void setFormatter(LogFormatter::ptr formatter) { m_formatter = formatter; }
+        void setFormatter(const std::string& str) { m_formatter = std::make_shared<LogFormatter>(str); }
 
     protected:
-        LogLevel::Level m_level = LogLevel::Level::DEBUG;
+        LogLevel::Level m_level = LogLevel::Level::UNKNOW;
         LogFormatter::ptr m_formatter;
     };
 
@@ -147,7 +150,7 @@ namespace sylar
     public:
         using ptr = std::shared_ptr<Logger>;
 
-        Logger(const std::string& name = "root");
+        Logger(const std::string& name = "root", LogLevel::Level level = LogLevel::UNKNOW);
         void log(LogLevel::Level level, LogEvent::ptr event);
 
         void debug(LogEvent::ptr event);
@@ -158,16 +161,20 @@ namespace sylar
 
         void addAppender(LogAppender::ptr appender);
         void delAppender(LogAppender::ptr appender);
+        void clearAppends();
 
         const std::string& getName() const { return m_name; }
         void setLevel(LogLevel::Level level) { m_level = level; }
         LogLevel::Level getLevel() const { return m_level; }
 
+        void setFormatter(LogFormatter::ptr formatter) { m_formatter = formatter; }
+        void setFormatter(const std::string& str) { m_formatter = std::make_shared<LogFormatter>(str); }
+
     private:
         std::string m_name;                         // 日志名称
         LogLevel::Level m_level;                    // 日志级别
         std::list<LogAppender::ptr> m_appenders;    // Appender集合
-        LogFormatter::ptr m_formatter;              // 日志格式器
+        LogFormatter::ptr m_formatter;              // 默认日志格式（当添加的appender未设置formatter时使用）
         Logger::ptr m_root;                         // 主日志器
     };
 

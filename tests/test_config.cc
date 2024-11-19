@@ -27,7 +27,7 @@ void print_yaml(YAML::Node& node, int level) {
 
 
 void test_yaml() {
-    YAML::Node root = YAML::LoadFile("/home/tang/workspaces/sylar/bin/conf/test.yml");
+    YAML::Node root = YAML::LoadFile("/home/tang/Desktop/workspaces/sylar/bin/conf/test.yml");
     print_yaml(root, 0);
 }
 
@@ -67,7 +67,7 @@ void test_config() {
         SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "before v_map: " << it.first << "-" << it.second;
     }
 
-    YAML::Node root = YAML::LoadFile("/home/tang/workspaces/sylar/bin/conf/test.yml");
+    YAML::Node root = YAML::LoadFile("/home/tang/Desktop/workspaces/sylar/bin/conf/test.yml");
     sylar::Config::LoadFromYaml(root);
 
     SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "after: " << g_int_value_config->getValue();
@@ -168,12 +168,12 @@ void test_class() {
     conf_person_val->addListener([](const Person& old_val, const Person& new_val) {
         SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "old_val: " << old_val.toString();
         SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "new_val: " << new_val.toString();
-    });
+        });
 
     Person p = conf_person_val->getValue();
     SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << p.toString();
 
-    YAML::Node root = YAML::LoadFile("/home/tang/workspaces/sylar/bin/conf/test.yml");
+    YAML::Node root = YAML::LoadFile("/home/tang/Desktop/workspaces/sylar/bin/conf/test.yml");
     sylar::Config::LoadFromYaml(root);
 
     p = conf_person_val->getValue();
@@ -182,10 +182,26 @@ void test_class() {
     SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << conf_person_val->toString();
 }
 
+
+void test_load_log() {
+    static sylar::Logger::ptr system_log = SYLAR_LOG_NAME("system");
+    SYLAR_LOG_INFO(system_log) << "hello1";
+    YAML::Node root = YAML::LoadFile("./bin/conf/log.yml");
+    sylar::Config::LoadFromYaml(root);
+
+    
+
+    SYLAR_LOG_INFO(system_log) << "hello2";
+    SYLAR_LOG_ERROR(SYLAR_LOG_ROOT()) << "root log";
+
+}
+
 int main(int argc, char** argv) {
     // test_config();
     // test_same_name_config();
-    test_class();
-
+    // test_class();
     // test_yaml();
+
+    test_load_log();
+
 }
