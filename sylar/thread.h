@@ -6,6 +6,7 @@
 #include <string>
 #include <memory>
 #include "noncopyable.h"
+#include "mutex.h"
 
 namespace sylar
 {
@@ -27,6 +28,7 @@ namespace sylar
         pthread_t m_pid = 0;            // pthead_create的pid
         std::function<void()> m_cb;
         std::string m_name;
+        Semaphore m_semaphore;
     };
 }
 

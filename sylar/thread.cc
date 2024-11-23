@@ -18,6 +18,7 @@ namespace sylar
             throw std::logic_error("pthread_create error");
         }
         // 确保线程的初始化完成后，主线程才能继续运行
+        m_semaphore.wait();
     }
 
     Thread::~Thread() {
@@ -53,6 +54,7 @@ namespace sylar
         pthread_setname_np(pthread_self(), thread->m_name.substr(0, 15).c_str());
         std::function<void()> cb;
         cb.swap(thread->m_cb);
+        thread->m_semaphore.notify();
         cb();
         pthread_exit(nullptr);
     }
