@@ -147,6 +147,26 @@ namespace sylar
         pthread_rwlock_t m_lock;
     };
 
+    class SpinLock : Noncopyable
+    {
+    public:
+        using Lock = ScopedLockImpl<SpinLock>;
+        SpinLock() {
+            pthread_spin_init(&m_mutex, 0);
+        }
+        ~SpinLock() {
+            pthread_spin_destroy(&m_mutex);
+        }
+        void lock() {
+            pthread_spin_lock(&m_mutex);
+        }
+        void unlock() {
+            pthread_spin_unlock(&m_mutex);
+        }
+    private:
+        pthread_spinlock_t m_mutex;
+    };
+
 }
 
 #endif

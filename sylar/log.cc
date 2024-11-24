@@ -84,6 +84,7 @@ namespace sylar
     }
 
     void Logger::addAppender(LogAppender::ptr appender) {
+        MutexType::Lock lock(m_mutex);
         if (!appender->getFormatter()) {
             appender->setFormatter(m_formatter);
         }
@@ -91,6 +92,7 @@ namespace sylar
     }
 
     void Logger::delAppender(LogAppender::ptr appender) {
+        MutexType::Lock lock(m_mutex);
         for (auto it = m_appenders.begin(); it != m_appenders.end(); ++it) {
             if (*it == appender) {
                 m_appenders.erase(it);
@@ -100,6 +102,7 @@ namespace sylar
     }
 
     void Logger::clearAppends() {
+        MutexType::Lock lock(m_mutex);
         m_appenders.clear();
     }
 
@@ -259,6 +262,7 @@ namespace sylar
 
     void StdoutLogAppender::log(Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event) {
         if (level >= m_level) {
+            MutexType::Lock lock(m_mutex);
             m_formatter->format(std::cout, logger, level, event);
         }
     }
@@ -269,6 +273,7 @@ namespace sylar
     }
 
     bool FileLogAppender::reopen() {
+        MutexType::Lock lock(m_mutex);
         if (m_filestream.is_open()) {
             m_filestream.close();
         }
@@ -284,6 +289,7 @@ namespace sylar
 
     void FileLogAppender::log(Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event) {
         if (level >= m_level) {
+            MutexType::Lock lock(m_mutex);
             m_formatter->format(m_filestream, logger, level, event);
         }
     }

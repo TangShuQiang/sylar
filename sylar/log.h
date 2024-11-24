@@ -12,6 +12,7 @@
 #include <map>
 #include "util.h"
 #include "singleton.h"
+#include "mutex.h"
 
 #define SYLAR_LOG_LEVEL(logger, level) \
     if (level >= logger->getLevel())    \
@@ -127,6 +128,7 @@ namespace sylar
     {
     public:
         using ptr = std::shared_ptr<LogAppender>;
+        using MutexType = Mutex;
 
         virtual ~LogAppender() {};
         virtual void log(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event) = 0;
@@ -134,13 +136,22 @@ namespace sylar
         void setLevel(LogLevel::Level level) { m_level = level; }
         LogLevel::Level getLevel() const { return m_level; }
 
-        LogFormatter::ptr getFormatter() const { return m_formatter; }
-        void setFormatter(LogFormatter::ptr formatter) { m_formatter = formatter; }
-        void setFormatter(const std::string& str) { m_formatter = std::make_shared<LogFormatter>(str); }
-
+        LogFormatter::ptr getFormatter() {
+            MutexType::Lock lock(m_mutex);
+            return m_formatter;
+        }
+        void setFormatter(LogFormatter::ptr formatter) {
+            MutexType::Lock lock(m_mutex);
+            m_formatter = formatter;
+        }
+        void setFormatter(const std::string& str) {
+            MutexType::Lock lock(m_mutex);
+            m_formatter = std::make_shared<LogFormatter>(str);
+        }
     protected:
         LogLevel::Level m_level = LogLevel::Level::UNKNOW;
         LogFormatter::ptr m_formatter;
+        MutexType m_mutex;
     };
 
     // 日志器
@@ -149,6 +160,7 @@ namespace sylar
         friend class LoggerManager;
     public:
         using ptr = std::shared_ptr<Logger>;
+        using MutexType = Mutex;
 
         Logger(const std::string& name = "root", LogLevel::Level level = LogLevel::UNKNOW);
         void log(LogLevel::Level level, LogEvent::ptr event);
@@ -167,15 +179,21 @@ namespace sylar
         void setLevel(LogLevel::Level level) { m_level = level; }
         LogLevel::Level getLevel() const { return m_level; }
 
-        void setFormatter(LogFormatter::ptr formatter) { m_formatter = formatter; }
-        void setFormatter(const std::string& str) { m_formatter = std::make_shared<LogFormatter>(str); }
-
+        void setFormatter(LogFormatter::ptr formatter) {
+            MutexType::Lock lock(m_mutex);
+            m_formatter = formatter;
+        }
+        void setFormatter(const std::string& str) {
+            MutexType::Lock lock(m_mutex);
+            m_formatter = std::make_shared<LogFormatter>(str);
+        }
     private:
         std::string m_name;                         // 日志名称
         LogLevel::Level m_level;                    // 日志级别
         std::list<LogAppender::ptr> m_appenders;    // Appender集合
         LogFormatter::ptr m_formatter;              // 默认日志格式（当添加的appender未设置formatter时使用）
         Logger::ptr m_root;                         // 主日志器
+        MutexType m_mutex;
     };
 
     // 输出到控制台的Appender
@@ -221,6 +239,8 @@ namespace sylar
     class LoggerManager
     {
     public:
+        using MutexType = Mutex;
+
         LoggerManager() {
             m_root.reset(new Logger());
             m_root->addAppender(std::make_shared<StdoutLogAppender>());
@@ -228,6 +248,7 @@ namespace sylar
         }
 
         Logger::ptr getLogger(const std::string& name) {
+            MutexType::Lock lock(m_mutex);
             auto it = m_loggers.find(name);
             if (it != m_loggers.end()) {
                 return it->second;
@@ -247,6 +268,7 @@ namespace sylar
     private:
         Logger::ptr m_root;
         std::map<std::string, Logger::ptr> m_loggers;
+        MutexType m_mutex;
     };
 
     using LoggerMgr = sylar::Singleton<LoggerManager>;
