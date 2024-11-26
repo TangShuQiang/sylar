@@ -1,5 +1,5 @@
-#ifndef __THREAD_H__
-#define __THREAD_H__
+#ifndef __SYLAR_THREAD_H__
+#define __SYLAR_THREAD_H__
 
 #include <pthread.h>
 #include <functional>
@@ -21,6 +21,7 @@ namespace sylar
         void join();
         static Thread* GetThis();
         static const std::string& GetName();
+        static void SetName(const std::string& name);
     private:
         static void* run(void* arg);
     private:

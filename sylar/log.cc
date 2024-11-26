@@ -47,7 +47,7 @@ namespace sylar
 
     // ------------------------------- Logger
     Logger::Logger(const std::string& name, LogLevel::Level level) : m_name(name), m_level(level) {
-        m_formatter.reset(new LogFormatter("%d{%Y-%m-%d %H:%M:%S} %t %F [%p] [%c] %f:%l %m%n"));
+        m_formatter.reset(new LogFormatter("%d{%Y-%m-%d %H:%M:%S} %t %N %F [%p] [%c] %f:%l %m%n"));
     }
 
     void Logger::log(LogLevel::Level level, LogEvent::ptr event) {
@@ -232,8 +232,8 @@ namespace sylar
                 XX(d, DateTimeFormatItem),          // 时间
                 XX(f, FilenameFormatItem),          // 文件名
                 XX(l, LineFormatItem),              // 行号
-                XX(F, FiberIdIdFormatItem)          // 协程id
-                // XX(N, ThreadNameFormatItem)         // 线程名称
+                XX(F, FiberIdIdFormatItem),         // 协程id
+                XX(N, ThreadNameFormatItem)         // 线程名称
             #undef XX
         };
         for (auto& it : vec) {

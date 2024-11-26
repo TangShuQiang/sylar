@@ -1,5 +1,5 @@
-#ifndef __MUTEX_H__
-#define __MUTEX_H__
+#ifndef __SYLAR_MUTEX_H__
+#define __SYLAR_MUTEX_H__
 
 #include <semaphore.h>
 #include <stdint.h>

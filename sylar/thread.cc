@@ -46,6 +46,15 @@ namespace sylar
         return t_thread_name;
     }
 
+    void Thread::SetName(const std::string& name) {
+        if (!name.empty()) {
+            if (t_thread) {
+                t_thread->m_name = name;
+            }
+            t_thread_name = name;
+        }
+    }
+
     void* Thread::run(void* arg) {
         Thread* thread = (Thread*)arg;
         thread->m_threadId = sylar::GetThreadId();

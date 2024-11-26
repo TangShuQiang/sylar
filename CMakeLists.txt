@@ -13,10 +13,11 @@ include_directories(
 )
 
 set(LIB_SRC
-    sylar/log.cc
-    sylar/util.cc
     sylar/config.cc
+    sylar/fiber.cc
+    sylar/log.cc
     sylar/thread.cc
+    sylar/util.cc
 )
 
 add_library(sylar SHARED ${LIB_SRC})
@@ -44,6 +45,16 @@ add_executable(test_thread tests/test_thread.cc)
 add_dependencies(test_thread sylar)
 target_link_libraries(test_thread ${LIBS})
 force_redefine_file_macro_for_sources(test_thread)
+
+add_executable(test_util tests/test_util.cc)
+add_dependencies(test_util sylar)
+target_link_libraries(test_util ${LIBS})
+force_redefine_file_macro_for_sources(test_util)
+
+add_executable(test_fiber tests/test_fiber.cc)
+add_dependencies(test_fiber sylar)
+target_link_libraries(test_fiber ${LIBS})
+force_redefine_file_macro_for_sources(test_fiber)
 
 
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
