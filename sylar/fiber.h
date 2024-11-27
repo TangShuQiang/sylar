@@ -30,13 +30,14 @@ namespace sylar
         uint64_t getId() const { return m_id; }
 
         void swapIn();
-        // void swapOut();
+        void swapOut();
 
         static void SetThis(Fiber::ptr f);     // 设置当前线程的运行协程
         static Fiber::ptr GetThis();       // 返回当前所在的协程
         static Fiber::ptr GetMainFiber();
         static void MainFunc();
         static uint64_t GetFiberId();
+        static void YieldToHold();
 
     private:
         uint64_t m_id;

@@ -83,12 +83,12 @@ namespace sylar
         }
     }
 
-    // void Fiber::swapOut() {
-    //     SetThis(GetMainFiber()->shared_from_this());
-    //     if (swapcontext(&m_ctx, &GetMainFiber()->m_ctx)) {
-    //         SYLAR_ASSERT2(false, "swapcontext");
-    //     }
-    // }
+    void Fiber::swapOut() {
+        SetThis(GetMainFiber()->shared_from_this());
+        if (swapcontext(&m_ctx, &GetMainFiber()->m_ctx)) {
+            SYLAR_ASSERT2(false, "swapcontext");
+        }
+    }
 
 
     /// ------------------------------------------------------
@@ -151,4 +151,13 @@ namespace sylar
         }
         return 0;
     }
+
+    void Fiber::YieldToHold() {
+        Fiber::ptr cur = GetThis();
+        SYLAR_ASSERT(cur->m_state == State::EXEC);
+        cur->m_state = State::HOLD;
+        cur->swapOut();
+    }
+
+
 }
