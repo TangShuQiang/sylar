@@ -5,6 +5,7 @@
 #include "util.h"
 #include "macro.h"
 #include <stdlib.h>
+#include "scheduler.h"
 
 namespace sylar
 {
@@ -36,8 +37,8 @@ namespace sylar
         SYLAR_LOG_DEBUG(g_logger) << "Fiber::Fiber()";
     }
 
-    Fiber::Fiber(std::function<void()> cb, size_t stacksize, bool use_caller)
-        : m_id(++s_fiber_id), m_state(State::INIT), m_cb(cb) {
+    Fiber::Fiber(std::function<void()> cb, size_t stacksize, bool usecaller)
+        : m_id(++s_fiber_id), m_state(State::READY), m_cb(cb) {
         m_stacksize = stacksize ? stacksize : g_fiber_stack_size->getValue();
         m_stack = StackAllocator::Alloc(m_stacksize);
         if (getcontext(&m_ctx)) {
@@ -45,11 +46,14 @@ namespace sylar
         }
         m_ctx.uc_stack.ss_sp = m_stack;
         m_ctx.uc_stack.ss_size = m_stacksize;
-        m_ctx.uc_link = &GetMainFiber()->m_ctx;
+        // m_ctx.uc_link = &GetMainFiber()->m_ctx;
+        // m_ctx.uc_link = &Scheduler::GetSchedulerFiber()->m_ctx;
         ++s_fiber_count;
-        if (use_caller) {
-
+        if (usecaller) {
+            m_ctx.uc_link = &GetMainFiber()->m_ctx;
+            makecontext(&m_ctx, &Fiber::CallerMainFunc, 0);
         } else {
+            m_ctx.uc_link = &Scheduler::GetSchedulerFiber()->m_ctx;
             makecontext(&m_ctx, &Fiber::MainFunc, 0);
         }
         SYLAR_LOG_DEBUG(g_logger) << "Fiber::Fiber id = " << m_id;
@@ -59,7 +63,7 @@ namespace sylar
         if (m_stack) {
             SYLAR_ASSERT(m_state == State::TERM
                 || m_state == State::EXCEPT
-                || m_state == State::INIT);
+                || m_state == State::READY);
             StackAllocator::Dealloc(m_stack);
         } else {
             SYLAR_ASSERT(!m_cb);
@@ -70,22 +74,31 @@ namespace sylar
             // }
         }
         --s_fiber_count;
-        SYLAR_LOG_DEBUG(g_logger) << "Fiber::~Fiber id = " << m_id
-            << " total=" << s_fiber_count;
+        SYLAR_LOG_DEBUG(g_logger) << "Fiber::~Fiber id = " << m_id;
     }
 
     void Fiber::swapIn() {
         SetThis(shared_from_this());
         SYLAR_ASSERT(m_state != State::EXEC);
         m_state = State::EXEC;
-        if (swapcontext(&GetMainFiber()->m_ctx, &m_ctx)) {
+        // if (swapcontext(&GetMainFiber()->m_ctx, &m_ctx)) {
+        if (swapcontext(&Scheduler::GetSchedulerFiber()->m_ctx, &m_ctx)) {
             SYLAR_ASSERT2(false, "swapcontext");
         }
     }
 
     void Fiber::swapOut() {
-        SetThis(GetMainFiber()->shared_from_this());
-        if (swapcontext(&m_ctx, &GetMainFiber()->m_ctx)) {
+        // SetThis(GetMainFiber()->shared_from_this());
+        SetThis(Scheduler::GetSchedulerFiber()->shared_from_this());
+        // if (swapcontext(&m_ctx, &GetMainFiber()->m_ctx)) {
+        if (swapcontext(&m_ctx, &Scheduler::GetSchedulerFiber()->m_ctx)) {
+            SYLAR_ASSERT2(false, "swapcontext");
+        }
+    }
+
+    void Fiber::call() {
+        SetThis(shared_from_this());
+        if (swapcontext(&GetMainFiber()->m_ctx, &m_ctx)) {
             SYLAR_ASSERT2(false, "swapcontext");
         }
     }
@@ -142,6 +155,29 @@ namespace sylar
                 << std::endl
                 << sylar::BacktraceToString();
         }
+        SetThis(Scheduler::GetSchedulerFiber());
+    }
+
+    void Fiber::CallerMainFunc() {
+        Fiber::ptr cur = GetThis();
+        SYLAR_ASSERT(cur);
+        try {
+            cur->m_cb();
+            cur->m_cb = nullptr;
+            cur->m_state = State::TERM;
+        } catch (std::exception& ex) {
+            cur->m_state = State::EXCEPT;
+            SYLAR_LOG_ERROR(g_logger) << "Fiber Except: " << ex.what()
+                << " fiber_id=" << cur->getId()
+                << std::endl
+                << sylar::BacktraceToString();
+        } catch (...) {
+            cur->m_state = State::EXCEPT;
+            SYLAR_LOG_ERROR(g_logger) << "Fiber Except: "
+                << " fiber_id=" << cur->getId()
+                << std::endl
+                << sylar::BacktraceToString();
+        }
         SetThis(GetMainFiber());
     }
 
@@ -155,7 +191,7 @@ namespace sylar
     void Fiber::YieldToHold() {
         Fiber::ptr cur = GetThis();
         SYLAR_ASSERT(cur->m_state == State::EXEC);
-        cur->m_state = State::HOLD;
+        cur->m_state = State::READY;
         cur->swapOut();
     }
 

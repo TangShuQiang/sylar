@@ -15,8 +15,8 @@ namespace sylar
 
         enum class State
         {
-            INIT,       // 初始化
-            HOLD,       // 暂停
+            // INIT,       // 初始化
+            // HOLD,       // 暂停
             EXEC,       // 执行中
             TERM,       // 结束
             READY,      // 可执行
@@ -25,17 +25,20 @@ namespace sylar
     private:
         Fiber();
     public:
-        Fiber(std::function<void()> cb, size_t stacksize = 0, bool use_caller = false);
+        Fiber(std::function<void()> cb, size_t stacksize = 0, bool usecaller = false);
         ~Fiber();
         uint64_t getId() const { return m_id; }
+        State getState() const { return m_state; }
 
         void swapIn();
         void swapOut();
+        void call();
 
         static void SetThis(Fiber::ptr f);     // 设置当前线程的运行协程
         static Fiber::ptr GetThis();       // 返回当前所在的协程
         static Fiber::ptr GetMainFiber();
         static void MainFunc();
+        static void CallerMainFunc();
         static uint64_t GetFiberId();
         static void YieldToHold();
 
