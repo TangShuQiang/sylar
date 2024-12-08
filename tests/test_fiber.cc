@@ -17,10 +17,13 @@ void run_in_fiber() {
 void test_fiber() {
     {
         SYLAR_LOG_INFO(g_logger) << "main begin";
-        sylar::Fiber::ptr fiber(new sylar::Fiber(run_in_fiber));
-        fiber->swapIn();
+        // sylar::Fiber::ptr fiber(new sylar::Fiber(run_in_fiber, 0, true));
+        sylar::Fiber fiber(&run_in_fiber, 0, true);
+        // fiber->call();
+        fiber.call();
         SYLAR_LOG_INFO(g_logger) << "main continue";
-        fiber->swapIn();
+        // fiber->call();
+        fiber.call();
         SYLAR_LOG_INFO(g_logger) << "main end";
     }
     SYLAR_LOG_INFO(g_logger) << "main end 2";

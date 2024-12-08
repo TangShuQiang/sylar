@@ -13,7 +13,8 @@ namespace sylar
     static std::atomic<uint64_t> s_fiber_count(0);
     static std::atomic<uint64_t> s_fiber_id(0);
 
-    static thread_local Fiber::ptr t_fiber = nullptr;         // 当前线程正在运行的协程
+    // static thread_local Fiber::ptr t_fiber = nullptr;         // 当前线程正在运行的协程
+    static thread_local Fiber* t_fiber = nullptr;             // 当前线程正在运行的协程
     static thread_local Fiber::ptr t_mainFiber = nullptr;     // 主协程
 
     static ConfigVar<uint32_t>::ptr g_fiber_stack_size = Config::Add<uint32_t>("fiber.stack_size", 128 * 1024, "fiber stack size");
@@ -72,13 +73,17 @@ namespace sylar
             // if (cur.get() == this) {
             //     SetThis(nullptr);
             // }
+            if (t_fiber == this) {
+                t_fiber = nullptr;
+            }
         }
         --s_fiber_count;
         SYLAR_LOG_DEBUG(g_logger) << "Fiber::~Fiber id = " << m_id;
     }
 
     void Fiber::swapIn() {
-        SetThis(shared_from_this());
+        // SetThis(shared_from_this());
+        SetThis(this);
         SYLAR_ASSERT(m_state != State::EXEC);
         m_state = State::EXEC;
         // if (swapcontext(&GetMainFiber()->m_ctx, &m_ctx)) {
@@ -89,15 +94,27 @@ namespace sylar
 
     void Fiber::swapOut() {
         // SetThis(GetMainFiber()->shared_from_this());
-        SetThis(Scheduler::GetSchedulerFiber()->shared_from_this());
+        // SetThis(Scheduler::GetSchedulerFiber()->shared_from_this());
+        SetThis(Scheduler::GetSchedulerFiber().get());
         // if (swapcontext(&m_ctx, &GetMainFiber()->m_ctx)) {
         if (swapcontext(&m_ctx, &Scheduler::GetSchedulerFiber()->m_ctx)) {
             SYLAR_ASSERT2(false, "swapcontext");
         }
     }
 
+    // 单独测试Fiber
+    // void Fiber::swapOut() {
+    //     SetThis(GetMainFiber().get());
+    //     if (swapcontext(&m_ctx, &GetMainFiber()->m_ctx)) {
+    //         SYLAR_ASSERT2(false, "swapcontext");
+    //     }
+    // }
+
     void Fiber::call() {
-        SetThis(shared_from_this());
+        // SetThis(shared_from_this());
+        SetThis(this);
+        SYLAR_ASSERT(m_state != State::EXEC);
+        m_state = State::EXEC;
         if (swapcontext(&GetMainFiber()->m_ctx, &m_ctx)) {
             SYLAR_ASSERT2(false, "swapcontext");
         }
@@ -107,12 +124,14 @@ namespace sylar
     /// ------------------------------------------------------
 
     // 设置当前线程的运行协程
-    void Fiber::SetThis(Fiber::ptr p) {
-        t_fiber = p;
+    // void Fiber::SetThis(Fiber::ptr p) {
+    void Fiber::SetThis(Fiber* f) {
+        t_fiber = f;
     }
 
     // 返回当前所在的协程
-    Fiber::ptr Fiber::GetThis() {
+    // Fiber::ptr Fiber::GetThis() {
+    Fiber* Fiber::GetThis() {
         if (t_fiber) {
             return t_fiber;
         }
@@ -123,7 +142,7 @@ namespace sylar
         if (!t_mainFiber) {
             t_mainFiber = GetMainFiber();
         }
-        t_fiber = t_mainFiber;
+        t_fiber = t_mainFiber.get();
         return t_fiber;
     }
 
@@ -136,7 +155,8 @@ namespace sylar
     }
 
     void Fiber::MainFunc() {
-        Fiber::ptr cur = GetThis();
+        // Fiber::ptr cur = GetThis();
+        Fiber* cur = GetThis();
         SYLAR_ASSERT(cur);
         try {
             cur->m_cb();
@@ -155,11 +175,12 @@ namespace sylar
                 << std::endl
                 << sylar::BacktraceToString();
         }
-        SetThis(Scheduler::GetSchedulerFiber());
+        SetThis(Scheduler::GetSchedulerFiber().get());
     }
 
     void Fiber::CallerMainFunc() {
-        Fiber::ptr cur = GetThis();
+        // Fiber::ptr cur = GetThis();
+        Fiber* cur = GetThis();
         SYLAR_ASSERT(cur);
         try {
             cur->m_cb();
@@ -178,7 +199,7 @@ namespace sylar
                 << std::endl
                 << sylar::BacktraceToString();
         }
-        SetThis(GetMainFiber());
+        SetThis(GetMainFiber().get());
     }
 
     uint64_t Fiber::GetFiberId() {
@@ -189,7 +210,8 @@ namespace sylar
     }
 
     void Fiber::YieldToHold() {
-        Fiber::ptr cur = GetThis();
+        // Fiber::ptr cur = GetThis();
+        Fiber* cur = GetThis();
         SYLAR_ASSERT(cur->m_state == State::EXEC);
         cur->m_state = State::READY;
         cur->swapOut();

@@ -12,24 +12,28 @@
 
 namespace sylar
 {
-    class Scheduler : public std::enable_shared_from_this<Scheduler>
-    // class Scheduler
+    // class Scheduler : public std::enable_shared_from_this<Scheduler>
+    class Scheduler
     {
     public:
         using MutexType = Mutex;
         using ptr = std::shared_ptr<Scheduler>;
         Scheduler(size_t threadCount = 1, bool usecaller = true, const std::string& name = "");
         virtual ~Scheduler();
+        const std::string& getName() const { return m_name; }
 
         void start();
         void stop();
+    protected:
         void run();
         virtual void idle();
         virtual void tickle();
         virtual bool stopping();
-
+    
+    public:
         static Fiber::ptr GetSchedulerFiber();
-        static Scheduler::ptr GetThisScheduler();
+        // static Scheduler::ptr GetThisScheduler();
+        static Scheduler* GetThisScheduler();
 
         template<typename FiberOrCb>
         void schedule(FiberOrCb fc, int target_thread_id = -1) {

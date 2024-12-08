@@ -9,11 +9,12 @@
 namespace sylar
 {
     class Fiber : public std::enable_shared_from_this<Fiber>
+    // class Fiber
     {
     public:
         using ptr = std::shared_ptr<Fiber>;
 
-        enum class State
+        enum State
         {
             // INIT,       // 初始化
             // HOLD,       // 暂停
@@ -34,8 +35,10 @@ namespace sylar
         void swapOut();
         void call();
 
-        static void SetThis(Fiber::ptr f);     // 设置当前线程的运行协程
-        static Fiber::ptr GetThis();       // 返回当前所在的协程
+        // static void SetThis(Fiber::ptr f);     // 设置当前线程的运行协程
+        static void SetThis(Fiber* f);     // 设置当前线程的运行协程
+        // static Fiber::ptr GetThis();       // 返回当前所在的协程
+        static Fiber* GetThis();       // 返回当前所在的协程
         static Fiber::ptr GetMainFiber();
         static void MainFunc();
         static void CallerMainFunc();

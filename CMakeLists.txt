@@ -15,6 +15,7 @@ include_directories(
 set(LIB_SRC
     sylar/config.cc
     sylar/fiber.cc
+    sylar/iomanager.cc
     sylar/log.cc
     sylar/scheduler.cc
     sylar/thread.cc
@@ -60,6 +61,10 @@ add_executable(test_scheduler tests/test_scheduler.cc ${LIB_SRC})
 # add_dependencies(test_scheduler sylar)
 target_link_libraries(test_scheduler ${LIBS})
 force_redefine_file_macro_for_sources(test_scheduler)
+
+add_executable(test_iomanager tests/test_iomanager.cc ${LIB_SRC})
+target_link_libraries(test_iomanager ${LIBS})
+force_redefine_file_macro_for_sources(test_iomanager)
 
 
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)

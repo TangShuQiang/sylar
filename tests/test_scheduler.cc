@@ -21,10 +21,15 @@ int main() {
 
     SYLAR_LOG_INFO(g_logger) << "begin";
 
-    std::shared_ptr<sylar::Scheduler> sc = std::make_shared<sylar::Scheduler>(5, true, "test");
-    sc->start();
-    sc->schedule(&test_fiber);
-    sc->stop();
+    // std::shared_ptr<sylar::Scheduler> sc = std::make_shared<sylar::Scheduler>(5, true, "test");
+    // sc->start();
+    // sc->schedule(&test_fiber);
+    // sc->stop();
+
+    sylar::Scheduler sc(5, true, "test");
+    sc.start();
+    sc.schedule(&test_fiber);
+    sc.stop();
 
     SYLAR_LOG_INFO(g_logger) << "over";
 

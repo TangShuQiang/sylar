@@ -6,17 +6,18 @@ namespace sylar
 {
     static sylar::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
 
-    static thread_local Scheduler::ptr t_scheduler = nullptr;
+    // static thread_local Scheduler::ptr t_scheduler = nullptr;
+    static thread_local Scheduler* t_scheduler = nullptr;
     static thread_local Fiber::ptr t_scheduler_fiber = nullptr;         // 当前线程的调度协程
 
     Fiber::ptr Scheduler::GetSchedulerFiber() {
         return t_scheduler_fiber;
     }
 
-    Scheduler::ptr Scheduler::GetThisScheduler() {
+    // Scheduler::ptr Scheduler::GetThisScheduler() {
+    Scheduler* Scheduler::GetThisScheduler() {
         return t_scheduler;
     }
-
 
     // 在非caller线程中，调度协程就是线程的主协程
     // 在caller线程中，调度协程是caller线程的子协程
@@ -24,7 +25,7 @@ namespace sylar
         : m_usecaller(usecaller), m_name(name), m_threadCount(threadCount) {
         SYLAR_ASSERT(m_threadCount > 0);
         m_rootThreadId = sylar::GetThreadId();
-        // t_scheduler = shared_from_this();
+        t_scheduler = this;
         if (usecaller) {
             --m_threadCount;
             sylar::Fiber::GetMainFiber();
@@ -37,9 +38,13 @@ namespace sylar
     Scheduler::~Scheduler() {
         SYLAR_ASSERT(m_stopping);
         SYLAR_LOG_DEBUG(g_logger) << "~Scheduler";
+        if (t_scheduler == this) {
+            t_scheduler = nullptr;
+        }
     }
 
     void Scheduler::start() {
+        // t_scheduler = this->shared_from_this();
         MutexType::Lock lock(m_mutex);
         m_stopping = false;
         SYLAR_ASSERT(m_threadpool.empty());
@@ -62,7 +67,8 @@ namespace sylar
 
     void Scheduler::run() {
         SYLAR_LOG_DEBUG(g_logger) << m_name << " run";
-        t_scheduler = this->shared_from_this();
+        // t_scheduler = this->shared_from_this();
+        t_scheduler = this;
         if (sylar::GetThreadId() != m_rootThreadId) {               // 非caller线程，此时创建调度协程（即线程的主协程）
             t_scheduler_fiber = Fiber::GetMainFiber();
         }
@@ -138,6 +144,7 @@ namespace sylar
     }
 
     bool Scheduler::stopping() {
+        MutexType::Lock lock(m_mutex);
         return m_stopping && m_fibertasks.empty() && m_activeThreadCount == 0;
     }
 
