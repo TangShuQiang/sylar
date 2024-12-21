@@ -2,10 +2,11 @@
 #define __SYLAR_IOMANAGER_H__
 
 #include "scheduler.h"
+#include "timer.h"
 
 namespace sylar
 {
-    class IOManager : public Scheduler
+    class IOManager : public Scheduler, public TimerManager
     {
     public:
         using RWMutexType = RWMutex;
@@ -33,6 +34,9 @@ namespace sylar
         void idle() override;
         void tickle() override;
         bool stopping() override;
+        void onTimerInsertedAtFront() override;
+
+        bool stopping(uint64_t& timeout);
 
     private:
         // 事件上下文类

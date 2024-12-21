@@ -20,6 +20,22 @@ void test1() {
     sylar::IOManager::GetThisIOManager();
 }
 
+sylar::Timer::ptr timer = nullptr;
+
+void test_timer() {
+    SYLAR_LOG_INFO(g_logger) << "test_timer";
+    sylar::IOManager iom(3, false, "iomanager");
+    timer = iom.addTimer(1000, []() {
+        static int i = 0;
+        SYLAR_LOG_INFO(g_logger) << "----------------------------------------------hello timer i = " << i;
+        if (++i == 3) {
+            timer->reset(2000, true);
+            // timer->cancel();
+        }
+    }, true);
+}
+
 int main() {
-    test1();
+    // test1();
+    test_timer();
 }

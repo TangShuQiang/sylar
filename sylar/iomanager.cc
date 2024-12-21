@@ -4,6 +4,7 @@
 #include <sys/epoll.h>
 #include <sys/eventfd.h>
 #include <string.h>
+#include <fcntl.h>
 
 namespace sylar
 {
@@ -136,7 +137,19 @@ namespace sylar
     }
 
     bool IOManager::stopping() {
-        return Scheduler::stopping() && m_pendingEventCount == 0;
+        uint64_t timeout = 0;
+        return stopping(timeout);
+    }
+
+    bool IOManager::stopping(uint64_t& timeout) {
+        timeout = getNextTimer();
+        return timeout == ~0ull
+            && Scheduler::stopping()
+            && m_pendingEventCount == 0;
+    }
+
+    void IOManager::onTimerInsertedAtFront() {
+        tickle();
     }
 
     void IOManager::idle() {
@@ -145,14 +158,20 @@ namespace sylar
         struct epoll_event* readyEvents = new struct epoll_event[MAX_EVENTS]();
         std::shared_ptr<struct epoll_event[]> shared_events(readyEvents);
         while (true) {
-            if (stopping()) {
+            uint64_t next_timeout = 0;
+            if (stopping(next_timeout)) {
                 SYLAR_LOG_INFO(g_logger) << "name=" << getName() << " idle stopping exit";
                 break;
             }
             int readyNum = 0;
             while (true) {
                 static const int MAX_TIMEOUT = 3000;
-                readyNum = epoll_wait(m_epollfd, readyEvents, MAX_EVENTS, MAX_TIMEOUT);
+                if (next_timeout != ~0ull) {
+                    next_timeout = ((int)next_timeout > MAX_TIMEOUT ? MAX_TIMEOUT : next_timeout);
+                } else {
+                    next_timeout = MAX_TIMEOUT;
+                }
+                readyNum = epoll_wait(m_epollfd, readyEvents, MAX_EVENTS, (int)next_timeout);
                 if (readyNum > 0) {
                     SYLAR_LOG_DEBUG(g_logger) << "epoll_wait ready, ret = " << readyNum;
                     break;
@@ -167,7 +186,12 @@ namespace sylar
                     }
                 }
             }
-            // std::vector<std::function<void()>> cbs;
+            std::vector<std::function<void()>> cbs;
+            listExpiredCb(cbs);
+            if (!cbs.empty()) {
+                schedule(cbs.begin(), cbs.end());
+                cbs.clear();
+            }
             for (int i = 0; i < readyNum; ++i) {
                 struct epoll_event& event = readyEvents[i];
                 if (event.data.fd == m_eventfd) {

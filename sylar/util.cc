@@ -3,6 +3,7 @@
 #include "fiber.h"
 #include <execinfo.h>
 #include <cxxabi.h>
+#include <sys/time.h>
 
 namespace sylar
 {
@@ -33,6 +34,12 @@ namespace sylar
             return rt;
         }
         return str;
+    }
+
+    uint64_t GetCurrentMS() {
+        struct timeval tv;
+        gettimeofday(&tv, NULL);
+        return (uint64_t)tv.tv_sec * 1000  + (tv.tv_usec) / 1000;
     }
 
     void Backtrack(std::vector<std::string>& bt, int size, int skip) {
