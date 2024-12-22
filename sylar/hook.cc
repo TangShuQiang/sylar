@@ -5,7 +5,9 @@
 #include <functional>
 
 #define HOOK_FUN(XX)    \
-    XX(sleep)
+    XX(sleep)           \
+    XX(usleep)          \
+    XX(fcntl)
 
 namespace sylar
 {
@@ -32,7 +34,14 @@ namespace sylar
         }
     };
     static _HookIniter s_hook_initer;
+}
 
+namespace sylar
+{
+    template<typename OriginFun, typename... Args>
+    static ssize_t do_io(int fd, OriginFun fun, const char* hook_fun_name, uint32_t event, int timeoutType, Args&&... args) {
+
+    }
 }
 
 extern "C" {
@@ -46,17 +55,28 @@ extern "C" {
         }
         sylar::Fiber::ptr fiber = sylar::Fiber::GetThis()->shared_from_this();
         sylar::IOManager* iom = sylar::IOManager::GetThisIOManager();
-        // iom->addTimer(seconds * 1000,
-        //     std::bind(
-        //         (void(sylar::Scheduler::*)(sylar::Fiber::ptr, int)) & sylar::IOManager::schedule,
-        //         iom, fiber, -1),
-        //     false);
-        iom->addTimer(seconds * 1000, std::bind((void(sylar::Scheduler::*)
-            (sylar::Fiber::ptr, int thread))&sylar::IOManager::schedule
-            ,iom, fiber, -1));
+        iom->addTimer(seconds * 1000,
+            std::bind(
+                (void(sylar::Scheduler::*)(sylar::Fiber::ptr, int)) & sylar::IOManager::schedule,
+                iom, fiber, -1),
+            false);
         sylar::Fiber::YieldToHold();
         return 0;
     }
 
+    int usleep(useconds_t usec) {
+        if (!sylar::t_hook_enable) {
+            return usleep_f(usec);
+        }
+        sylar::Fiber::ptr fiber = sylar::Fiber::GetThis()->shared_from_this();
+        sylar::IOManager* iom = sylar::IOManager::GetThisIOManager();
+        iom->addTimer(usec / 1000,
+            std::bind(
+                (void(sylar::Scheduler::*)(sylar::Fiber::ptr, int)) & sylar::IOManager::schedule,
+                iom, fiber, -1),
+            false);
+        sylar::Fiber::YieldToHold();
+        return 0;
+    }
 
 }

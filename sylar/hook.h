@@ -13,6 +13,12 @@ extern "C" {
     using sleep_fun = unsigned int(*)(unsigned int);
     extern sleep_fun sleep_f;
 
+    using usleep_fun = int(*)(useconds_t);
+    extern usleep_fun usleep_f;
+
+    using fcntl_fun = int(*)(int, int cmd, ...);
+    extern fcntl_fun fcntl_f;
+
 }
 
 #endif

@@ -15,6 +15,7 @@ include_directories(
 set(LIB_SRC
     sylar/config.cc
     sylar/fiber.cc
+    sylar/fd_manager.cc
     sylar/hook.cc
     sylar/iomanager.cc
     sylar/log.cc
