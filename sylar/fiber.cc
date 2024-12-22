@@ -213,7 +213,8 @@ namespace sylar
         // Fiber::ptr cur = GetThis();
         Fiber* cur = GetThis();
         SYLAR_ASSERT(cur->m_state == State::EXEC);
-        cur->m_state = State::READY;
+        // cur->m_state = State::READY;
+        cur->m_state = State::HOLD;
         cur->swapOut();
     }
 

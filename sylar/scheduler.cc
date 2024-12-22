@@ -1,6 +1,7 @@
 #include "scheduler.h"
 #include "macro.h"
 #include <string>
+#include <hook.h>
 
 namespace sylar
 {
@@ -67,6 +68,7 @@ namespace sylar
 
     void Scheduler::run() {
         SYLAR_LOG_DEBUG(g_logger) << m_name << " run";
+        set_hook_enable(true);
         // t_scheduler = this->shared_from_this();
         t_scheduler = this;
         if (sylar::GetThreadId() != m_rootThreadId) {               // 非caller线程，此时创建调度协程（即线程的主协程）
@@ -110,7 +112,9 @@ namespace sylar
                 if (cb_fiber->getState() == Fiber::State::READY) {
                     schedule(cb_fiber);
                 }
-            } else if (fibertask.fiber && fibertask.fiber->getState() == Fiber::State::READY) {
+            } else if (fibertask.fiber &&
+                (fibertask.fiber->getState() == Fiber::State::READY
+                    || fibertask.fiber->getState() == Fiber::State::HOLD)) {
                 fibertask.fiber->swapIn();
                 --m_activeThreadCount;
                 if (fibertask.fiber->getState() == Fiber::State::READY) {

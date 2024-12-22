@@ -9,7 +9,7 @@
 namespace sylar
 {
     class Fiber : public std::enable_shared_from_this<Fiber>
-    // class Fiber
+        // class Fiber
     {
     public:
         using ptr = std::shared_ptr<Fiber>;
@@ -17,7 +17,7 @@ namespace sylar
         enum State
         {
             // INIT,       // 初始化
-            // HOLD,       // 暂停
+            HOLD,       // 暂停
             EXEC,       // 执行中
             TERM,       // 结束
             READY,      // 可执行
