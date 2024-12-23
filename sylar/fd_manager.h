@@ -16,7 +16,7 @@ namespace sylar
 
         bool isSocket() const { return m_isSocket; }
         bool getSysNonblock() const { return m_sysNonblock; }
-        bool isUserNonblock() const { return m_userNonblock; }
+        bool getUserNonblock() const { return m_userNonblock; }
         bool isClosed() const { return m_isClosed; }
 
         void setSysNonblock(bool v) { m_sysNonblock = v; }
@@ -51,7 +51,7 @@ namespace sylar
         std::vector<FdCtx::ptr> m_datas;
     };
 
+    using FdMgr = Singleton<FdManager>;
 }
-
 
 #endif

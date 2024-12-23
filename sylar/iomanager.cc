@@ -117,6 +117,65 @@ namespace sylar
         return true;
     }
 
+    // // 取消事件，如果事件存在则触发事件
+    bool IOManager::cancelEvent(int fd, Event event) {
+        RWMutex::ReadLock readlock(m_mutex);
+        if (fd >= (int)m_fdContexts.size()) {
+            return false;
+        }
+        FdContext* fdcontext = m_fdContexts[fd];
+        readlock.unlock();
+        FdContext::MutexType::Lock lock(fdcontext->mutex);
+        if (!(fdcontext->events & event)) {
+            return false;
+        }
+        Event newEvents = (Event)(fdcontext->events & ~event);
+        int op = newEvents ? EPOLL_CTL_MOD : EPOLL_CTL_DEL;
+        struct epoll_event epollevent;
+        memset(&epollevent, 0, sizeof(epollevent));
+        epollevent.events = EPOLLET | newEvents;
+        epollevent.data.ptr = fdcontext;
+        int ret = epoll_ctl(m_epollfd, op, fd, &epollevent);
+        if (ret == -1) {
+            SYLAR_LOG_ERROR(g_logger) << "epoll_ctl(" << m_epollfd << ", "
+                << op << ", " << fd << ", " << epollevent.events << "): " << strerror(errno);
+            return false;
+        }
+        --m_pendingEventCount;
+        fdcontext->triggerEvent(event);
+        return true;
+    }
+
+    bool IOManager::cancelAll(int fd) {
+        RWMutex::ReadLock readlock(m_mutex);
+        if (fd >= (int)m_fdContexts.size()) {
+            return false;
+        }
+        FdContext* fdcontext = m_fdContexts[fd];
+        readlock.unlock();
+
+        FdContext::MutexType::Lock lock(fdcontext->mutex);
+        if (!fdcontext->events) {
+            return false;
+        }
+        int ret = epoll_ctl(m_epollfd, EPOLL_CTL_DEL, fd, NULL);
+        if (ret == -1) {
+            SYLAR_LOG_ERROR(g_logger) << "epoll_ctl(" << m_epollfd << ", "
+                << EPOLL_CTL_DEL << ", " << fd << "): " << strerror(errno);
+            return false;
+        }
+        if (fdcontext->events & Event::READ) {
+            --m_pendingEventCount;
+            fdcontext->triggerEvent(Event::READ);
+        }
+        if (fdcontext->events & Event::WRITE) {
+            --m_pendingEventCount;
+            fdcontext->triggerEvent(Event::WRITE);
+        }
+        SYLAR_ASSERT(fdcontext->events == 0);
+        return true;
+    }
+
     void IOManager::contextResize(size_t size) {
         m_fdContexts.resize(size);
         for (size_t i = 0; i < m_fdContexts.size(); ++i) {

@@ -27,8 +27,8 @@ namespace sylar
 
         int addEvent(int fd, Event event, std::function<void()> cb = nullptr);
         bool delEvent(int fd, Event event);
-        // bool cancelEvent(int fd, Event event);
-        // bool cancelAll(int fd);
+        bool cancelEvent(int fd, Event event);  // 取消事件，如果事件存在则触发事件
+        bool cancelAll(int fd);
 
     protected:
         void idle() override;
