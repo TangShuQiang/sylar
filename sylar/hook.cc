@@ -3,6 +3,7 @@
 #include "fiber.h"
 #include "iomanager.h"
 #include "fd_manager.h"
+#include "config.h"
 #include <dlfcn.h>
 #include <functional>
 #include <sys/socket.h>
@@ -32,6 +33,9 @@ namespace sylar
 {
     static thread_local bool t_hook_enable = false;
 
+    static sylar::ConfigVar<int>::ptr g_tcp_connect_timeout = 
+        sylar::Config::Add("tcp.connect.timeout", 5000, "tcp connect timeout");
+
     bool is_hook_enable() {
         return t_hook_enable;
     }
@@ -40,10 +44,18 @@ namespace sylar
         t_hook_enable = flag;
     }
 
+    static uint64_t s_connect_timeout = -1;
+
     struct _HookIniter
     {
         _HookIniter() {
             hook_init();
+            s_connect_timeout = g_tcp_connect_timeout->getValue();
+
+            g_tcp_connect_timeout->addListener([](const int& old_value, const int& new_value) {
+                SYLAR_LOG_INFO(g_logger) << "tcp connect timeout changed from " << old_value << " to " << new_value;
+                s_connect_timeout = new_value;
+            });
         }
 
         void hook_init() {
@@ -54,7 +66,6 @@ namespace sylar
     };
     static _HookIniter s_hook_initer;
 }
-
 
 struct timer_info
 {
@@ -174,13 +185,68 @@ extern "C" {
         return fd;
     }
 
-    // int connect(int sockfd, const struct sockaddr* addr, socklen_t addrlen) {
+    int connect(int sockfd, const struct sockaddr* addr, socklen_t addrlen) {
+        return connect_with_timeout(sockfd, addr, addrlen, sylar::s_connect_timeout);
+    }
 
-    // }
+    int connect_with_timeout(int sockfd, const struct sockaddr* addr, socklen_t addrlen, uint64_t timeout_ms) {
+        if (!sylar::t_hook_enable) {
+            return connect_f(sockfd, addr, addrlen);
+        }
+        sylar::FdCtx::ptr ctx = sylar::FdMgr::GetInstance()->get(sockfd);
+        if (!ctx || ctx->isClosed()) {
+            errno = EBADF;
+            return -1;
+        }
+        if (!ctx->isSocket() || ctx->getUserNonblock()) {
+            return connect_f(sockfd, addr, addrlen);
+        }
+        int n = connect_f(sockfd, addr, addrlen);
+        if (n == -1 && errno == EINPROGRESS) {
+            sylar::IOManager* iom = sylar::IOManager::GetThisIOManager();
+            sylar::Timer::ptr timer;
+            std::shared_ptr<timer_info> tinfo(new timer_info);
+            std::weak_ptr<timer_info> winfo(tinfo);
 
-    // int connect_with_timeout(int sockfd, const struct sockaddr* addr, socklen_t addrlen, uint64_t timeout_ms) {
-
-    // }
+            if (timeout_ms != (uint64_t)-1ull) {
+                timer = iom->addConditionTimer(timeout_ms, [&]() {
+                    auto t = winfo.lock();
+                    if (!t || t->cancelled) {
+                        return;
+                    }
+                    t->cancelled = ETIMEDOUT;
+                    iom->cancelEvent(sockfd, sylar::IOManager::WRITE);
+                    }, winfo);
+            }
+            int ret = iom->addEvent(sockfd, sylar::IOManager::Event::WRITE);
+            if (ret == -1) {
+                SYLAR_LOG_ERROR(g_logger) << "connect addEvent(" << sockfd << ", WIRTE) error";
+                if (timer) {
+                    timer->cancel();
+                }
+                return -1;
+            }
+            sylar::Fiber::YieldToHold();
+            if (timer) {
+                timer->cancel();
+            }
+            if (tinfo->cancelled) {
+                errno = tinfo->cancelled;
+                return -1;
+            }
+            int error = 0;
+            socklen_t len = sizeof(int);
+            if (-1 == getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &error, &len)) {
+                return -1;
+            }
+            if (!error) {
+                return 0;
+            }
+            errno = error;
+            return -1;
+        }
+        return n;
+    }
 
     ssize_t read(int fd, void* buf, size_t count) {
         return do_io(fd, read_f, "read", sylar::IOManager::Event::READ, SO_RCVTIMEO, buf, count);

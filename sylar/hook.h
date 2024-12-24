@@ -2,6 +2,7 @@
 #define __SYLAR_HOOK_H__
 
 #include <unistd.h>
+#include <stdint.h>
 
 namespace sylar
 {
@@ -25,6 +26,8 @@ extern "C" {
 
     using connect_fun = int(*)(int, const struct sockaddr*, socklen_t);
     extern connect_fun connect_f;
+
+    extern int connect_with_timeout(int sockfd, const struct sockaddr* addr, socklen_t addrlen, uint64_t timeout_ms);
 
     // read
     using read_fun = ssize_t(*)(int, void*, size_t);
