@@ -13,6 +13,7 @@ include_directories(
 )
 
 set(LIB_SRC
+    sylar/address.cc
     sylar/config.cc
     sylar/fiber.cc
     sylar/fd_manager.cc
@@ -73,6 +74,9 @@ add_executable(test_hook tests/test_hook.cc ${LIB_SRC})
 target_link_libraries(test_hook ${LIBS})
 force_redefine_file_macro_for_sources(test_hook)
 
+add_executable(test_address tests/test_address.cc ${LIB_SRC})
+target_link_libraries(test_address ${LIBS})
+force_redefine_file_macro_for_sources(test_address)
 
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
