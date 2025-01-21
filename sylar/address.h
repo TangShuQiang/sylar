@@ -54,6 +54,7 @@ namespace sylar
         virtual ~Address() {}
 
         std::string toString() const;   // 返回可读性字符串
+        int getFamily() const;
     };
 
     // ----------------------------------------------------------------------------

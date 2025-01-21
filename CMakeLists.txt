@@ -21,6 +21,7 @@ set(LIB_SRC
     sylar/iomanager.cc
     sylar/log.cc
     sylar/scheduler.cc
+    sylar/socket.cc
     sylar/thread.cc
     sylar/timer.cc
     sylar/util.cc
@@ -78,14 +79,9 @@ add_executable(test_address tests/test_address.cc ${LIB_SRC})
 target_link_libraries(test_address ${LIBS})
 force_redefine_file_macro_for_sources(test_address)
 
-SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
-SET(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+add_executable(test_socket tests/test_socket.cc ${LIB_SRC})
+target_link_libraries(test_socket ${LIBS})
+force_redefine_file_macro_for_sources(test_socket)
 
-
-
-# cmake_minimum_required(VERSION 2.8)
-# project(sylar)
-# set(CMAKE_VERBOSE_MAKEFILE ON)
-# set(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -rdynamic -O0 -g -std=c++11 -Wall -Wno-deprecated -Werror -Wno-unused-function")
-# file(GLOB_RECURSE SRC sylar/*.h sylar/*.cc)
-# add_executable(sylar ${SRC})
+set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
+set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)

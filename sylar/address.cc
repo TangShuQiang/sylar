@@ -186,6 +186,10 @@ namespace sylar
         return ss.str();
     }
 
+    int Address::getFamily() const {
+        return getAddr()->sa_family;
+    }
+
     // ----------------------------------------------------------------------------
     IPAddress::ptr IPAddress::Create(const char* addr, uint16_t port) {
         addrinfo* results;
