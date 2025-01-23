@@ -14,6 +14,7 @@ include_directories(
 
 set(LIB_SRC
     sylar/address.cc
+    sylar/bytearray.cc
     sylar/config.cc
     sylar/fiber.cc
     sylar/fd_manager.cc
@@ -82,6 +83,10 @@ force_redefine_file_macro_for_sources(test_address)
 add_executable(test_socket tests/test_socket.cc ${LIB_SRC})
 target_link_libraries(test_socket ${LIBS})
 force_redefine_file_macro_for_sources(test_socket)
+
+add_executable(test_bytearray tests/test_bytearray.cc ${LIB_SRC})
+target_link_libraries(test_bytearray ${LIBS})
+force_redefine_file_macro_for_sources(test_bytearray)
 
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
