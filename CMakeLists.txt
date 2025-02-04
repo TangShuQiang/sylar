@@ -26,6 +26,7 @@ set(LIB_SRC
     sylar/thread.cc
     sylar/timer.cc
     sylar/util.cc
+    sylar/http/http.cc
 )
 
 add_library(sylar SHARED ${LIB_SRC})
@@ -87,6 +88,10 @@ force_redefine_file_macro_for_sources(test_socket)
 add_executable(test_bytearray tests/test_bytearray.cc ${LIB_SRC})
 target_link_libraries(test_bytearray ${LIBS})
 force_redefine_file_macro_for_sources(test_bytearray)
+
+add_executable(test_http tests/test_http.cc ${LIB_SRC})
+target_link_libraries(test_http ${LIBS})
+force_redefine_file_macro_for_sources(test_http)
 
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
