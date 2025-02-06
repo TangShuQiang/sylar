@@ -11,8 +11,8 @@ namespace sylar
         HttpMethod StringToHttpMethod(const std::string& m) {
         #define XX(num, name, desc)                 \
             if (strcmp(#name, m.c_str()) == 0) {    \
-                return HttpMethod:name;             \
-            }                                       \
+                return HttpMethod::name;            \
+            }                                       
             HTTP_METHOD_MAP(XX);
         #undef XX
             return HttpMethod::INVALID_METHOD;
@@ -22,7 +22,7 @@ namespace sylar
         #define XX(num, name, desc)                         \
             if (strncmp(#name, m, strlen(#name)) == 0) {    \
                 return HttpMethod::name;                    \
-            }                                               \
+            }                                               
             HTTP_METHOD_MAP(XX);
         #undef XX
             return HttpMethod::INVALID_METHOD;

@@ -27,7 +27,11 @@ set(LIB_SRC
     sylar/timer.cc
     sylar/util.cc
     sylar/http/http.cc
+    sylar/http/http_parser.cc
 )
+
+ragelmaker(sylar/http/http11/http11_parser.rl LIB_SRC ${CMAKE_CURRENT_SOURCE_DIR}/sylar/http/http11)
+ragelmaker(sylar/http/http11/httpclient_parser.rl LIB_SRC ${CMAKE_CURRENT_SOURCE_DIR}/sylar/http/http11)
 
 add_library(sylar SHARED ${LIB_SRC})
 
@@ -92,6 +96,10 @@ force_redefine_file_macro_for_sources(test_bytearray)
 add_executable(test_http tests/test_http.cc ${LIB_SRC})
 target_link_libraries(test_http ${LIBS})
 force_redefine_file_macro_for_sources(test_http)
+
+add_executable(test_http_parser tests/test_http_parser.cc ${LIB_SRC})
+target_link_libraries(test_http_parser ${LIBS})
+force_redefine_file_macro_for_sources(test_http_parser)
 
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
