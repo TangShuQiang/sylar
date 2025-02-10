@@ -106,5 +106,9 @@ add_executable(test_tcp_server tests/test_tcp_server.cc ${LIB_SRC})
 target_link_libraries(test_tcp_server ${LIBS})
 force_redefine_file_macro_for_sources(test_tcp_server)
 
+add_executable(echo_server examples/echo_server.cc ${LIB_SRC})
+target_link_libraries(echo_server ${LIBS})
+force_redefine_file_macro_for_sources(echo_server)
+
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)

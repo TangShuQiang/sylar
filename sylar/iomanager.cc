@@ -235,7 +235,7 @@ namespace sylar
                     SYLAR_LOG_DEBUG(g_logger) << "epoll_wait ready, ret = " << readyNum;
                     break;
                 } else if (readyNum == 0) {
-                    SYLAR_LOG_DEBUG(g_logger) << "epoll_wait timeout";
+                    // SYLAR_LOG_DEBUG(g_logger) << "epoll_wait timeout";
                     break;
                 } else {
                     if (errno == EINTR) {
@@ -255,8 +255,9 @@ namespace sylar
                 struct epoll_event& event = readyEvents[i];
                 if (event.data.fd == m_eventfd) {
                     uint64_t two;
-                    ssize_t ret = read(m_eventfd, &two, sizeof(uint64_t));
-                    SYLAR_ASSERT(ret == sizeof(uint64_t));
+                    read(m_eventfd, &two, sizeof(uint64_t));
+                    // ssize_t ret = read(m_eventfd, &two, sizeof(uint64_t));
+                    // SYLAR_ASSERT(ret == sizeof(uint64_t)); 
                     continue;
                 }
                 FdContext* fdcontext = (FdContext*)event.data.ptr;
@@ -324,7 +325,7 @@ namespace sylar
     void IOManager::FdContext::triggerEvent(Event event) {
         SYLAR_ASSERT(event & events);
         events = (Event)(events & ~event);
-        EventContext eventContext = getContext(event);
+        EventContext& eventContext = getContext(event);
         if (eventContext.cb) {
             eventContext.scheduler->schedule(eventContext.cb);
             eventContext.cb = nullptr;

@@ -54,7 +54,7 @@ namespace sylar
             m_ctx.uc_link = &GetMainFiber()->m_ctx;
             makecontext(&m_ctx, &Fiber::CallerMainFunc, 0);
         } else {
-            m_ctx.uc_link = &Scheduler::GetSchedulerFiber()->m_ctx;
+            // m_ctx.uc_link = &Scheduler::GetSchedulerFiber()->m_ctx;
             makecontext(&m_ctx, &Fiber::MainFunc, 0);
         }
         SYLAR_LOG_DEBUG(g_logger) << "Fiber::Fiber id = " << m_id;
@@ -175,7 +175,9 @@ namespace sylar
                 << std::endl
                 << sylar::BacktraceToString();
         }
-        SetThis(Scheduler::GetSchedulerFiber().get());
+        // SetThis(Scheduler::GetSchedulerFiber().get());
+        cur->swapOut();
+        SYLAR_ASSERT2(false, "never reach fiber_id=" + std::to_string(cur->getId()));
     }
 
     void Fiber::CallerMainFunc() {

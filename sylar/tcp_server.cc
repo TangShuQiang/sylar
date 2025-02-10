@@ -7,7 +7,7 @@ namespace sylar
     static sylar::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
 
     static sylar::ConfigVar<uint64_t>::ptr g_tcp_server_read_timeout =
-        sylar::Config::Add("tcp_server.read_timeout", (uint64_t)(60 * 1000 * 2), "tcp server read timeout");
+        sylar::Config::Add("tcp_server.read_timeout", (uint64_t)(10 * 1000), "tcp server read timeout");
 
     TcpServer::TcpServer(IOManager* worker, IOManager* ioWorker, IOManager* acceptWorker)
         : m_worker(worker)
