@@ -23,6 +23,7 @@ set(LIB_SRC
     sylar/log.cc
     sylar/scheduler.cc
     sylar/socket.cc
+    sylar/tcp_server.cc
     sylar/thread.cc
     sylar/timer.cc
     sylar/util.cc
@@ -100,6 +101,10 @@ force_redefine_file_macro_for_sources(test_http)
 add_executable(test_http_parser tests/test_http_parser.cc ${LIB_SRC})
 target_link_libraries(test_http_parser ${LIBS})
 force_redefine_file_macro_for_sources(test_http_parser)
+
+add_executable(test_tcp_server tests/test_tcp_server.cc ${LIB_SRC})
+target_link_libraries(test_tcp_server ${LIBS})
+force_redefine_file_macro_for_sources(test_tcp_server)
 
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
