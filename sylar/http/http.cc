@@ -180,6 +180,17 @@ namespace sylar
             return ss.str();
         }
 
+        void HttpRequest::init() {
+            std::string conn = getHeader("connection");
+            if (!conn.empty()) {
+                if (strcasecmp(conn.c_str(), "keep-alive") == 0) {
+                    m_close = false;
+                } else {
+                    m_close = true;
+                }
+            }
+        }
+
         // void HttpRequest::initQueryParam() {
 
         // }

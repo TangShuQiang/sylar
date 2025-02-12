@@ -286,6 +286,7 @@ namespace sylar
             // 转为字符串
             std::string toString() const;
 
+            void init();
             // void initQueryParam();
             // void initBodyParam();
 

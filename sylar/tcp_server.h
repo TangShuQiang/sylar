@@ -48,7 +48,7 @@ namespace sylar
         // 开始接受连接
         virtual void startAccept(Socket::ptr sock);
 
-    private:
+    protected:
         std::vector<Socket::ptr> m_socks;   // 监听Socket数组
         IOManager* m_worker;                // 新连接的Socket工作的调度器
         IOManager* m_ioWorker;              // 新连接的Socket工作的调度器
