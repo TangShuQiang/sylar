@@ -7,6 +7,22 @@ void run() {
     while (!server->bind(addr)) {
         sleep(2);
     }
+
+    auto servletDispatch = server->getServletDispatch();
+    servletDispatch->addServlet("/tsq/xx", [](sylar::http::HttpRequest::ptr req
+        , sylar::http::HttpResponse::ptr rsp
+        , sylar::http::HttpSession::ptr session) {
+            rsp->setBody(req->toString());
+            return 0;
+        });
+
+    servletDispatch->addGlobServlet("/tsq/*", [](sylar::http::HttpRequest::ptr req
+        , sylar::http::HttpResponse::ptr rsp
+        , sylar::http::HttpSession::ptr session) {
+            rsp->setBody("Glob:\r\n" + req->toString());
+            return 0;
+        });
+
     server->start();
 }
 

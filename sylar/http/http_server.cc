@@ -10,12 +10,15 @@ namespace sylar
 
         HttpServer::HttpServer(bool keepalive, sylar::IOManager* worker, sylar::IOManager* ioWorker, sylar::IOManager* acceptWorker)
             : TcpServer(worker, ioWorker, acceptWorker)
-            , m_isKeepalive(keepalive) {
+            , m_isKeepalive(keepalive)
+            , m_dispatch(std::make_shared<ServletDispatch>()) {
             m_type = "http";
+
         }
 
         void HttpServer::setName(const std::string& name) {
             TcpServer::setName(name);
+            m_dispatch->setDefault(std::make_shared<NotFoundServlet>(name));
         }
 
         void HttpServer::handleClient(Socket::ptr client) {
@@ -31,7 +34,8 @@ namespace sylar
                 SYLAR_LOG_DEBUG(g_logger) << "req:" << req->toString();
                 HttpResponse::ptr rsp = std::make_shared<HttpResponse>(req->getVersion(), req->isClose() || !m_isKeepalive);
                 rsp->setHeader("Server", getName());
-                rsp->setBody("hello world!");
+                // rsp->setBody("hello world!");
+                m_dispatch->handler(req, rsp, session);
                 session->sendResponse(rsp);
                 if (!m_isKeepalive || req->isClose()) {
                     break;
