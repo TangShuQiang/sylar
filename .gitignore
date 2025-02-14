@@ -37,3 +37,5 @@ bin/*
 log.txt
 logs
 logs/*
+
+*.rl.cc
