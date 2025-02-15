@@ -29,6 +29,7 @@ set(LIB_SRC
     sylar/timer.cc
     sylar/util.cc
     sylar/http/http.cc
+    sylar/http/http_connection.cc
     sylar/http/http_parser.cc
     sylar/http/http_session.cc
     sylar/http/http_server.cc
@@ -123,6 +124,10 @@ force_redefine_file_macro_for_sources(test_http_server)
 add_executable(test_uri tests/test_uri.cc ${LIB_SRC})
 target_link_libraries(test_uri ${LIBS})
 force_redefine_file_macro_for_sources(test_uri)
+
+add_executable(test_http_connection tests/test_http_connection.cc ${LIB_SRC})
+target_link_libraries(test_http_connection ${LIBS})
+force_redefine_file_macro_for_sources(test_http_connection)
 
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)

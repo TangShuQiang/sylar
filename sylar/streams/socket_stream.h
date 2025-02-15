@@ -19,7 +19,7 @@ namespace sylar
         int write(const void* buffer, size_t length) override;
         void close() override;
         Socket::ptr getSocket() const { return m_socket; }
-        bool isConnect() const;
+        bool isConnected() const;
 
     private:
         Socket::ptr m_socket;
