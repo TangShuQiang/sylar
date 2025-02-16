@@ -16,7 +16,7 @@ namespace sylar
         , m_type(type)
         , m_protocol(protocol)
         , m_isConnected(false) {
-        createSock();
+        // createSock();
         if (m_type == SOCK_DGRAM) {
             m_isConnected = true;
         }
@@ -27,7 +27,9 @@ namespace sylar
     }
 
     Socket::ptr Socket::CreateUDP(Address::ptr addr) {
-        return std::make_shared<Socket>(addr->getFamily(), SOCK_DGRAM, 0);
+        Socket::ptr sock = std::make_shared<Socket>(addr->getFamily(), SOCK_DGRAM, 0);
+        sock->createSock();
+        return sock;
     }
 
     Socket::ptr Socket::CreateTCPSocket() {
@@ -35,7 +37,9 @@ namespace sylar
     }
 
     Socket::ptr Socket::CreateUDPSocket() {
-        return std::make_shared<Socket>(AF_INET, SOCK_DGRAM, 0);
+        Socket::ptr sock = std::make_shared<Socket>(AF_INET, SOCK_DGRAM, 0);
+        sock->createSock();
+        return sock;
     }
 
     Socket::ptr Socket::CreateTCPSocket6() {
@@ -43,7 +47,9 @@ namespace sylar
     }
 
     Socket::ptr Socket::CreateUDPSocket6() {
-        return std::make_shared<Socket>(AF_INET6, SOCK_DGRAM, 0);
+        Socket::ptr sock = std::make_shared<Socket>(AF_INET6, SOCK_DGRAM, 0);
+        sock->createSock();
+        return sock;
     }
 
     Socket::ptr Socket::CreateUnixTCPSocket() {
@@ -298,17 +304,17 @@ namespace sylar
         }
         Address::ptr result;
         switch (m_family) {
-        case AF_INET:
-            result = std::make_shared<IPv4Address>();
-            break;
-        case AF_INET6:
-            result = std::make_shared<IPv6Address>();
-            break;
-        case AF_UNIX:
-            result = std::make_shared<UnixAddress>();
-            break;
-        default:
-            result = std::make_shared<UnknownAddress>(m_family);
+            case AF_INET:
+                result = std::make_shared<IPv4Address>();
+                break;
+            case AF_INET6:
+                result = std::make_shared<IPv6Address>();
+                break;
+            case AF_UNIX:
+                result = std::make_shared<UnixAddress>();
+                break;
+            default:
+                result = std::make_shared<UnknownAddress>(m_family);
         }
         socklen_t addrlen = result->getAddrLen();
         if (getsockname(m_sockfd, result->getAddr(), &addrlen)) {
@@ -330,17 +336,17 @@ namespace sylar
         }
         Address::ptr result;
         switch (m_family) {
-        case AF_INET:
-            result = std::make_shared<IPv4Address>();
-            break;
-        case AF_INET6:
-            result = std::make_shared<IPv6Address>();
-            break;
-        case AF_UNIX:
-            result = std::make_shared<UnixAddress>();
-            break;
-        default:
-            result = std::make_shared<UnknownAddress>(m_family);
+            case AF_INET:
+                result = std::make_shared<IPv4Address>();
+                break;
+            case AF_INET6:
+                result = std::make_shared<IPv6Address>();
+                break;
+            case AF_UNIX:
+                result = std::make_shared<UnixAddress>();
+                break;
+            default:
+                result = std::make_shared<UnknownAddress>(m_family);
         }
         socklen_t addrlen = result->getAddrLen();
         if (getpeername(m_sockfd, result->getAddr(), &addrlen)) {

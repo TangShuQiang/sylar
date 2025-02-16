@@ -198,7 +198,7 @@ namespace sylar
             using ptr = std::shared_ptr<HttpRequest>;
             using MapType = std::map<std::string, std::string, CaseInsensitiveLess>;
 
-            HttpRequest(uint8_t version = 0x11, bool close = false);
+            HttpRequest(uint8_t version = 0x11, bool close = true);
 
             // std::shared_ptr<HttpResponse> createResponse();
 
@@ -313,7 +313,7 @@ namespace sylar
             using ptr = std::shared_ptr<HttpResponse>;
             using MapType = std::map<std::string, std::string, CaseInsensitiveLess>;
 
-            HttpResponse(uint8_t version = 0x11, bool close = false);
+            HttpResponse(uint8_t version = 0x11, bool close = true);
 
             HttpStatus getStatus() const { return m_status; }
             uint8_t getVersion() const { return m_version; }

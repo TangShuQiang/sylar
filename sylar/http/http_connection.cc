@@ -202,7 +202,7 @@ namespace sylar
             bool has_host = false;
             for (auto& it : headers) {
                 if (strcasecmp(it.first.c_str(), "connection") == 0) {
-                    if (strcasecmp(it.second.c_str(), "close") == 0) {
+                    if (strcasecmp(it.second.c_str(), "keep-alive") == 0) {
                         req->setClose(false);
                     }
                     continue;
@@ -389,9 +389,10 @@ namespace sylar
             bool has_host = false;
             for (auto& it : headers) {
                 if (strcasecmp(it.first.c_str(), "connection") == 0) {
-                    if (strcasecmp(it.second.c_str(), "close") == 0) {
-                        req->setClose(true);
+                    if (strcasecmp(it.second.c_str(), "keep-alive") == 0) {
+                        req->setClose(false);
                     }
+                    continue;
                 }
                 if (!has_host && strcasecmp(it.first.c_str(), "host") == 0) {
                     has_host = !it.second.empty();

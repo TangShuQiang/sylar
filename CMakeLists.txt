@@ -134,5 +134,9 @@ add_executable(test_daemon tests/test_daemon.cc ${LIB_SRC})
 target_link_libraries(test_daemon ${LIBS})
 force_redefine_file_macro_for_sources(test_daemon)
 
+add_executable(my_http_server samples/my_http_server.cc ${LIB_SRC})
+target_link_libraries(my_http_server ${LIBS})
+force_redefine_file_macro_for_sources(my_http_server)
+
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
