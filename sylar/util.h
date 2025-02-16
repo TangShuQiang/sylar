@@ -15,6 +15,8 @@ namespace sylar
 
     void Backtrack(std::vector<std::string>& bt, int size = 64, int skip = 1);
     std::string BacktraceToString(int size = 64, int skip = 2, const std::string& prefix = "");
+
+    std::string Time2Str(time_t ts = time(0), const std::string& format = "%Y-%m-%d %H:%M%S");
 }
 
 #endif

@@ -67,5 +67,13 @@ namespace sylar
         return ss.str();
     }
 
+    std::string Time2Str(time_t ts, const std::string& format) {
+        struct tm tm;
+        localtime_r(&ts, &tm);
+        char buf[64];
+        strftime(buf, sizeof(buf), format.c_str(), &tm);
+        return buf;
+    }
+
 } 
  
