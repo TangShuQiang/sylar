@@ -294,16 +294,18 @@ namespace sylar
             return v;
         }
 
-        // template<typename T>
-        // static typename ConfigVar<T>::ptr Lookup(const std::string& name) {
-        //     auto it = s_datas.find(name);
-        //     if (it == s_datas.end()) {
-        //         return nullptr;
-        //     }
-        //     return std::dynamic_pointer_cast<ConfigVar<T>>(it->second);
-        // }
+        template<typename T>
+        static typename ConfigVar<T>::ptr Lookup(const std::string& name) {
+            auto it = GetDatas().find(name);
+            if (it == GetDatas().end()) {
+                return nullptr;
+            }
+            return std::dynamic_pointer_cast<ConfigVar<T>>(it->second);
+        }
 
         static void LoadFromYaml(const YAML::Node& root);
+
+        static void LoadFromConfDir(const std::string& path, bool force = false);
 
         static ConfigVarBase::ptr LookupBase(const std::string& name) {
             RWMutexType::ReadLock lock(GetMutex());

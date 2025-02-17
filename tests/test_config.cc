@@ -1,6 +1,7 @@
 #include "../sylar/log.h"
 #include <yaml-cpp/yaml.h>
 #include "../sylar/config.h"
+#include "env.h"
 
 
 void print_yaml(YAML::Node& node, int level) {
@@ -189,11 +190,13 @@ void test_load_log() {
     YAML::Node root = YAML::LoadFile("./bin/conf/log.yml");
     sylar::Config::LoadFromYaml(root);
 
-    
-
     SYLAR_LOG_INFO(system_log) << "hello2";
     SYLAR_LOG_ERROR(SYLAR_LOG_ROOT()) << "root log";
 
+}
+
+void test_loadconf() {
+    sylar::Config::LoadFromConfDir("conf");
 }
 
 int main(int argc, char** argv) {
@@ -202,6 +205,13 @@ int main(int argc, char** argv) {
     // test_class();
     // test_yaml();
 
-    test_load_log();
+    // test_load_log();
+
+    sylar::EnvMgr::GetInstance()->init(argc, argv);
+    test_loadconf();
+    std::cout << "------------" << std::endl;
+    SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << "hello";
+    sleep(10);
+    test_loadconf();
 
 }

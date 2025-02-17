@@ -17,6 +17,7 @@ set(LIB_SRC
     sylar/bytearray.cc
     sylar/config.cc
     sylar/daemon.cc
+    sylar/env.cc
     sylar/fiber.cc
     sylar/fd_manager.cc
     sylar/hook.cc
@@ -137,6 +138,10 @@ force_redefine_file_macro_for_sources(test_daemon)
 add_executable(my_http_server samples/my_http_server.cc ${LIB_SRC})
 target_link_libraries(my_http_server ${LIBS})
 force_redefine_file_macro_for_sources(my_http_server)
+
+add_executable(test_env tests/test_env.cc ${LIB_SRC})
+target_link_libraries(test_env ${LIBS})
+force_redefine_file_macro_for_sources(test_env)
 
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
